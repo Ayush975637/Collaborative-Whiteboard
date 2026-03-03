@@ -12,6 +12,8 @@ const CURSOR_COLORS = ['#ef4444', '#3b82f6', '#22c55e', '#f97316', '#a855f7', '#
 
 export default function Whiteboard({ roomId }) {
   const {user}=useUser()
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'reconnecting'>('connected')
+
   const [lines, setLines] = useState([])
   const [cursors,setCursors]=useState({})
   const [color,setColor]=useState('#000000')
@@ -78,6 +80,15 @@ socket.on('canvas-cleared',()=>{
       socket.off('canvas-cleared')
     }
   }, [roomId, user])
+
+useEffect(() => {
+  socket.on('connect', () => setConnectionStatus('connected'))
+  socket.on('disconnect', () => setConnectionStatus('disconnected'))
+  socket.on('reconnecting', () => setConnectionStatus('reconnecting'))
+}, [])
+
+
+
 
   const handleMouseDown = (e) => {
     setIsDrawing(true)
@@ -178,6 +189,15 @@ className='relative w-screen h-screen overflow-hidden bg-white'
 color={CURSOR_COLORS[i%CURSOR_COLORS.length]}
 />
 ))}
+
+{connectionStatus !== 'connected' && (
+  <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 bg-yellow-500 text-white px-4 py-2 rounded-lg text-sm">
+    {connectionStatus === 'reconnecting' ? '🔄 Reconnecting...' : '❌ Connection lost'}
+  </div>
+)}
+
+
+
 
    <Stage
       width={typeof window !== 'undefined' ? window.innerWidth : 0}
