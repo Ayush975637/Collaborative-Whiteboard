@@ -76,9 +76,7 @@ if(roomStates[roomId]){
     roomStates[roomId].push(line)
 }
 socket.to(roomId).emit('drawing',line)
-if(roomStates[roomId]?.length%10===0){
-    await saveToMongo(roomId,roomStates[roomId])
-}
+await saveToMongo(roomId, roomStates[roomId])
 
 })
 
