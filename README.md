@@ -119,10 +119,11 @@ MongoDB. On restart, backend loads from Redis first then falls back
 to MongoDB.
 
 
-**3.Websocket deployment**
+**3. Websocket deployment**
 Vercel doesn't support persistent connections. Separating frontend 
 and backend into different deployment targets (Vercel + Render) 
 solved this while keeping cold start times low.
+
 ---
 
 
@@ -132,6 +133,7 @@ solved this while keeping cold start times low.
 -[] Undo/redo functionality with operation history
 -[] Export canvas as PNG
 -[] Room access control (owner can lock room)
+
 ---
 
 ##Author 
