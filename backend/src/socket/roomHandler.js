@@ -36,7 +36,7 @@ module.exports=(io)=>{
 //         roomStates[roomId]=[]
 //     }
 // })
-socket.on('join-room',async({roomId,username})=>{
+socket.on('join-room',async({roomId,username,lastStrokeIndex})=>{
     socket.join(roomId)
     socket.data.roomId=roomId
     socket.data.username=username
@@ -57,12 +57,12 @@ if(!roomStates[roomId]){
 
 
 
+const missedStrokes = roomStates[roomId].slice(lastStrokeIndex)
 
 
 
 
-
-    socket.emit('canvas-state',roomStates[roomId] || [])
+    socket.emit('canvas-state',missedStrokes)
     io.to(roomId).emit('room-users',roomUsers[roomId])
 
 

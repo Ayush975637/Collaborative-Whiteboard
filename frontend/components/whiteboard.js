@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState,useRef } from 'react'
 import { Stage, Layer, Line } from 'react-konva'
 import { getSocket } from '../lib/socket'
 import Cursor from './Cursor'
@@ -13,7 +13,7 @@ const CURSOR_COLORS = ['#ef4444', '#3b82f6', '#22c55e', '#f97316', '#a855f7', '#
 export default function Whiteboard({ roomId }) {
   const {user}=useUser()
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'reconnecting'>('connected')
-
+  const lastStrokeIndex = useRef(0)
   const [lines, setLines] = useState([])
   const [cursors,setCursors]=useState({})
   const [color,setColor]=useState('#000000')
@@ -34,13 +34,21 @@ export default function Whiteboard({ roomId }) {
 socket.emit('join-room', {
       roomId,
     
-      username: user?.firstName || 'Anonymous'
+      username: user?.firstName || 'Anonymous',
+      lastStrokeIndex: lastStrokeIndex.current
     })
 
-
+ socket.on('reconnect', () => {
+    socket.emit('join-room', {
+      roomId,
+      username: user?.firstName || 'Anonymous',
+      lastStrokeIndex: lastStrokeIndex.current
+    })
+  })
 
     socket.on('drawing', (data) => {
       setLines(prev => [...prev, data])
+      lastStrokeIndex.current += 1
     })
 
     socket.on('canvas-state', (existingLines) => {
