@@ -1,7 +1,7 @@
 const roomStates= {}
 const roomUsers={}
 const Room=require('./../models/Room')
-
+const redis=require('./../lib/redis')
 
 const saveToMongo=async(roomId,lines)=>{
     await Room.findOneAndUpdate(
@@ -50,9 +50,23 @@ socket.on('join-room',async({roomId,username,lastStrokeIndex})=>{
 
 
 if(!roomStates[roomId]){
-    // try to load from mongo
-    const existing=await Room.findOne({roomId})
+
+
+ const redisStrokes = await redis.lrange(`room:${roomId}:strokes`, 0, -1)
+    if (redisStrokes.length > 0) {
+      roomStates[roomId] = redisStrokes.map(s => JSON.parse(s))
+    } else{
+const existing=await Room.findOne({roomId})
     roomStates[roomId]=existing?.lines||[]
+    }
+
+
+
+
+
+
+    
+    
 }
 
 
@@ -75,6 +89,15 @@ socket.on('draw',async({roomId,line})=>{
 if(roomStates[roomId]){
     roomStates[roomId].push(line)
 }
+  await redis.rpush(`room:${roomId}:strokes`, JSON.stringify(line))
+
+
+
+
+
+
+
+
 socket.to(roomId).emit('drawing',line)
 await saveToMongo(roomId, roomStates[roomId])
 
