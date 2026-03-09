@@ -16,6 +16,7 @@ export default function Whiteboard({ roomId }) {
   const lastStrokeIndex = useRef(0)
   const [lines, setLines] = useState([])
   const [mounted, setMounted] = useState(false);
+
   const [cursors,setCursors]=useState({})
   const [color,setColor]=useState('#000000')
   const [brushWidth,setBrushWidth]=useState(3)
@@ -102,14 +103,13 @@ socket.on('canvas-cleared',()=>{
 
 useEffect(() => {
     setMounted(true);
+   
+
   socket.on('connect', () => setConnectionStatus('connected'))
   socket.on('disconnect', () => setConnectionStatus('disconnected'))
   socket.on('reconnecting', () => setConnectionStatus('reconnecting'))
-}, [])
 
-
-useEffect(() => {
-  const canvas = stageRef.current?.container()
+const canvas = stageRef.current?.container()
   const preventScroll = (e) => e.preventDefault()
   
   canvas?.addEventListener('touchstart', preventScroll, { passive: false })
@@ -119,7 +119,25 @@ useEffect(() => {
     canvas?.removeEventListener('touchstart', preventScroll)
     canvas?.removeEventListener('touchmove', preventScroll)
   }
+
+
+
+
 }, [])
+
+
+// useEffect(() => {
+//   const canvas = stageRef.current?.container()
+//   const preventScroll = (e) => e.preventDefault()
+  
+//   canvas?.addEventListener('touchstart', preventScroll, { passive: false })
+//   canvas?.addEventListener('touchmove', preventScroll, { passive: false })
+
+//   return () => {
+//     canvas?.removeEventListener('touchstart', preventScroll)
+//     canvas?.removeEventListener('touchmove', preventScroll)
+//   }
+// }, [])
 
 
 
