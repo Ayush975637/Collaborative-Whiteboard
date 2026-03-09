@@ -119,7 +119,7 @@ useEffect(() => {
     canvas?.removeEventListener('touchstart', preventScroll)
     canvas?.removeEventListener('touchmove', preventScroll)
   }
-}, [mounted])
+}, [])
 
 
 
