@@ -12,9 +12,10 @@ const CURSOR_COLORS = ['#ef4444', '#3b82f6', '#22c55e', '#f97316', '#a855f7', '#
 
 export default function Whiteboard({ roomId }) {
   const {user}=useUser()
-  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'reconnecting'>('connected')
+  const [connectionStatus, setConnectionStatus] = useState('connected')
   const lastStrokeIndex = useRef(0)
   const [lines, setLines] = useState([])
+  const [mounted, setMounted] = useState(false);
   const [cursors,setCursors]=useState({})
   const [color,setColor]=useState('#000000')
   const [brushWidth,setBrushWidth]=useState(3)
@@ -24,6 +25,13 @@ export default function Whiteboard({ roomId }) {
   console.log('socket in whiteboard:', socket.id)
   console.log('roomId in whiteboard:', roomId)
   console.log('user in whiteboard:', user)
+
+
+
+
+
+
+
 
   useEffect(() => {
     // socket.emit('join-room', roomId)
@@ -36,7 +44,9 @@ socket.emit('join-room', {
     
       username: user?.firstName || 'Anonymous',
       lastStrokeIndex: lastStrokeIndex.current
+      
     })
+    
 
  socket.on('reconnect', () => {
     socket.emit('join-room', {
@@ -90,6 +100,7 @@ socket.on('canvas-cleared',()=>{
   }, [roomId, user])
 
 useEffect(() => {
+    setMounted(true);
   socket.on('connect', () => setConnectionStatus('connected'))
   socket.on('disconnect', () => setConnectionStatus('disconnected'))
   socket.on('reconnecting', () => setConnectionStatus('reconnecting'))
@@ -184,9 +195,11 @@ className='relative w-screen h-screen overflow-hidden bg-white'
     </div>
 
     {/* RIGHT — ShareRoom */}
-    <div className='absolute top-4 right-4 z-50'>  {/* ✅ right-4 instead of left-4 */}
-      <ShareRoom roomId={roomId} />
-    </div>
+    {mounted && (
+  <div className='absolute top-4 right-4 z-50'>
+    <ShareRoom roomId={roomId} />
+  </div>
+)}
 {/* other user cursors */}
 {Object.values(cursors).map((cursor,i)=>(
   <Cursor
