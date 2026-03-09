@@ -3,7 +3,10 @@ import { useEffect, useState } from 'react'
 
 const ShareRoom=({roomId})=>{
 const [copied,setCopied]=useState(false)
-const [roomLink,setRoomLink]=useState(typeof window !== 'undefined' ? window.location.href : '')
+const [roomLink,setRoomLink]=useState('')
+useEffect(()=>{
+     setRoomLink(window.location.href)
+},[])
 
 // room link
 

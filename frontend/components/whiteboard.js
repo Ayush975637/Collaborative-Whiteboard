@@ -109,16 +109,7 @@ useEffect(() => {
   socket.on('disconnect', () => setConnectionStatus('disconnected'))
   socket.on('reconnecting', () => setConnectionStatus('reconnecting'))
 
-const canvas = stageRef.current?.container()
-  const preventScroll = (e) => e.preventDefault()
-  
-  canvas?.addEventListener('touchstart', preventScroll, { passive: false })
-  canvas?.addEventListener('touchmove', preventScroll, { passive: false })
 
-  return () => {
-    canvas?.removeEventListener('touchstart', preventScroll)
-    canvas?.removeEventListener('touchmove', preventScroll)
-  }
 
 
 
@@ -126,18 +117,23 @@ const canvas = stageRef.current?.container()
 }, [])
 
 
-// useEffect(() => {
-//   const canvas = stageRef.current?.container()
-//   const preventScroll = (e) => e.preventDefault()
-  
-//   canvas?.addEventListener('touchstart', preventScroll, { passive: false })
-//   canvas?.addEventListener('touchmove', preventScroll, { passive: false })
+useEffect(()=>{
+if(!mounted) return
+const canvas=stageRef.current?.container()
+if(!canvas) return
 
-//   return () => {
-//     canvas?.removeEventListener('touchstart', preventScroll)
-//     canvas?.removeEventListener('touchmove', preventScroll)
-//   }
-// }, [])
+const preventScroll=(e)=>e.preventDefault()
+canvas.addEventListener('touchstart',preventScroll,{passive:false})
+canvas.addEventListener('touchmove',preventScroll,{passive:false})
+
+return ()=>{
+  canvas.removeEventListener('touchstart',preventScroll)
+  canvas.removeEventListener('touchmove',preventScroll)
+}
+
+
+
+},[mounted])
 
 
 
@@ -240,11 +236,9 @@ className='relative w-screen h-screen overflow-hidden bg-white'
     </div>
 
     {/* RIGHT — ShareRoom */}
-    {mounted && (
-  <div className='absolute top-4 right-4 z-50'>
-    <ShareRoom roomId={roomId} />
-  </div>
-)}
+ <div className='absolute top-4 right-4 z-50'>
+  <ShareRoom roomId={roomId} />
+</div>
 {/* other user cursors */}
 {Object.values(cursors).map((cursor,i)=>(
   <Cursor
