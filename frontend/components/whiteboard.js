@@ -22,6 +22,7 @@ export default function Whiteboard({ roomId }) {
   const [tool,setTool]=useState('pen')
   const [isDrawing, setIsDrawing] = useState(false)
   const socket = getSocket()
+  const stageRef=useRef(null)
   console.log('socket in whiteboard:', socket.id)
   console.log('roomId in whiteboard:', roomId)
   console.log('user in whiteboard:', user)
@@ -107,6 +108,20 @@ useEffect(() => {
 }, [])
 
 
+useEffect(() => {
+  const canvas = stageRef.current?.container()
+  const preventScroll = (e) => e.preventDefault()
+  
+  canvas?.addEventListener('touchstart', preventScroll, { passive: false })
+  canvas?.addEventListener('touchmove', preventScroll, { passive: false })
+
+  return () => {
+    canvas?.removeEventListener('touchstart', preventScroll)
+    canvas?.removeEventListener('touchmove', preventScroll)
+  }
+}, [mounted])
+
+
 
 
   const handleMouseDown = (e) => {
@@ -169,6 +184,18 @@ const handleClear=()=>{
 }
 
 
+const handleTouchStart=(e)=>{
+  e.evt.preventDefault()
+  handleMouseDown(e)
+}
+const handleTouchMove=(e)=>{
+  e.evt.preventDefault()
+  handleMouseMove(e)
+}
+const handleTouchEnd=(e)=>{
+ 
+  handleMouseUp()
+}
 
 
 
@@ -221,11 +248,15 @@ color={CURSOR_COLORS[i%CURSOR_COLORS.length]}
 
 
    <Stage
+   ref={stageRef}
       width={typeof window !== 'undefined' ? window.innerWidth : 0}
       height={typeof window !== 'undefined' ? window.innerHeight : 0}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
+       onTouchStart={handleTouchStart}   
+  onTouchMove={handleTouchMove}     
+  onTouchEnd={handleTouchEnd} 
       className="bg-white"
     >
       <Layer>
