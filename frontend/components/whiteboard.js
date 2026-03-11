@@ -16,7 +16,7 @@ export default function Whiteboard({ roomId }) {
   const lastStrokeIndex = useRef(0)
   const [lines, setLines] = useState([])
   const [mounted, setMounted] = useState(false);
-
+  const[showShare,setShowShare]=useState(false);
   const [cursors,setCursors]=useState({})
   const [color,setColor]=useState('#000000')
   const [brushWidth,setBrushWidth]=useState(3)
@@ -116,7 +116,7 @@ useEffect(() => {
 
 }, [])
 
-
+// mobile /tablet logic for writing 
 useEffect(()=>{
 if(!mounted) return
 const canvas=stageRef.current?.container()
@@ -136,7 +136,7 @@ return ()=>{
 },[mounted])
 
 
-
+// logic for computer
 
   const handleMouseDown = (e) => {
     setIsDrawing(true)
@@ -197,7 +197,7 @@ const handleClear=()=>{
   socket.emit('clear-canvas',{roomId})
 }
 
-
+// mobile logic 
 const handleTouchStart=(e)=>{
   e.evt.preventDefault()
   handleMouseDown(e)
@@ -211,7 +211,10 @@ const handleTouchEnd=(e)=>{
   handleMouseUp()
 }
 
+const handleShareClick=()=>{
+  setShowShare(prev=>!prev)
 
+}
 
 
 
@@ -223,20 +226,46 @@ const handleTouchEnd=(e)=>{
 className='relative w-screen h-screen overflow-hidden bg-white'
 
 >
- <div className='absolute top-4 left-4 z-50 bg-white bg-opacity-90 p-3 rounded-lg shadow-lg'>
-      <Toolbar
-        color={color}
-        onColorChange={setColor}
-        width={brushWidth}
-        onWidthChange={setBrushWidth}
-        tool={tool}
-        onToolChange={setTool}
-        onClear={handleClear}
-      />
-    </div>
+
+  <div className='fixed top-2 left-2 z-50 md:hidden'>
+  <div className="flex flex-col gap-1 bg-white/90 p-2 rounded-xl shadow-lg">
+    <button onClick={() => setTool('pen')} className={`px-2 py-1 rounded-lg text-sm ${tool === 'pen' ? 'bg-black text-white' : 'text-gray-700'}`}>✏️</button>
+    <button onClick={() => setTool('eraser')} className={`px-2 py-1 rounded-lg text-sm ${tool === 'eraser' ? 'bg-black text-white' : 'text-gray-600'}`}>🧹</button>
+    <button onClick={handleClear} className="px-2 py-1 rounded-lg text-sm text-red-500 hover:bg-red-50">🗑️</button>
+  </div>
+</div>
+ 
+<div className='absolute bottom-4 left-1/2 -translate-x-1/2 z-50 md:top-4 md:left-4 md:translate-x-0 md:bottom-auto bg-white bg-opacity-90 p-2 rounded-xl shadow-lg max-w-[95vw] overflow-x-hidden'>
+  <Toolbar
+    color={color}
+    onColorChange={setColor}
+    width={brushWidth}
+    onWidthChange={setBrushWidth}
+    tool={tool}
+    onToolChange={setTool}
+    onClear={handleClear}
+  />
+</div>
+<div className=' z-50 absolute top-4 right-4 md:hidden block'>
+<button
+onClick={()=>handleShareClick()}
+className="bg-purple-500 text-white px-3 py-1 rounded-lg text-sm"
+>
+{showShare?'Close Share':'Share'}
+</button>
+</div>
+
+{showShare && (
+  <div className=' z-50 md:hidden block items-center justify-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'>
+    <ShareRoom roomId={roomId} />
+  </div>
+)}
+
+
+
 
     {/* RIGHT — ShareRoom */}
- <div className='absolute top-4 right-4 z-50'>
+ <div className='absolute bottom-4 right-4 z-50 md:block hidden'>
   <ShareRoom roomId={roomId} />
 </div>
 {/* other user cursors */}
@@ -288,19 +317,6 @@ color={CURSOR_COLORS[i%CURSOR_COLORS.length]}
 
 
 </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
 
  
   )
