@@ -235,7 +235,7 @@ className='relative w-screen h-screen overflow-hidden bg-white'
   </div>
 </div>
  
-<div className='absolute bottom-4 left-1/2 -translate-x-1/2 z-50 md:top-4 md:left-4 md:translate-x-0 md:bottom-auto bg-white bg-opacity-90 p-2 rounded-xl shadow-lg max-w-[95vw] overflow-x-hidden'>
+<div className='absolute bottom-15 left-1/2 -translate-x-1/2 z-50 md:top-4 md:left-4 md:translate-x-0 md:bottom-auto bg-white bg-opacity-90 p-2 rounded-xl shadow-lg max-w-[95vw] overflow-x-hidden'>
   <Toolbar
     color={color}
     onColorChange={setColor}
