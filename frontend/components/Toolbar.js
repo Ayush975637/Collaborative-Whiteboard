@@ -1,6 +1,8 @@
-const COLORS = ['#000000', '#ef4444', '#3b82f6', '#22c55e', '#f97316', '#a855f7']
 
-export default function Toolbar({ color, width, tool, onColorChange, onToolChange, onWidthChange, onClear }) {
+
+export default function Toolbar({isDark, color, width, tool, onColorChange, onToolChange, onWidthChange, onClear }) {
+
+  const COLORS = [isDark?'#ffffff':'#000000', '#ef4444', '#3b82f6', '#22c55e', '#f97316', '#a855f7']
   return (
 
     <div className="flex flex-row md:flex-col items-center md:gap-4 gap-1 p-2 mx-auto ">

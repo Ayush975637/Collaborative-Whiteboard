@@ -6,11 +6,42 @@ import Cursor from './Cursor'
 import Toolbar from './Toolbar'
 import {useUser} from  '@clerk/nextjs'
 import ShareRoom from './ShareRoom'
-
+import RoomUsers from './RoomUsers'
+import { ModeToggle } from './toggleTheme'
 const CURSOR_COLORS = ['#ef4444', '#3b82f6', '#22c55e', '#f97316', '#a855f7', '#ec4899']
+
+const CANVAS_APP_NAMES = [
+  'CanvasFlux',
+  'SketchNova',
+  'Boardlytic',
+  'InkSphere',
+  'DoodleForge',
+  'WhiteSync',
+  'CanvasDrift',
+  'Scribblyx',
+  'BrainSlate',
+  'FlowBoard',
+  'PixelChalk',
+  'DraftNest',
+  'IdeaCanvas',
+  'SketchHive',
+  'MindPadX',
+  'DrawOrbit',
+  'NoteLoom',
+  'InkTrail',
+  'BoardCraft',
+  'CanvasPulse'
+];
+
+function getRandomName() {
+  const randomIndex = Math.floor(Math.random() * CANVAS_APP_NAMES.length);
+  return CANVAS_APP_NAMES[randomIndex];
+}
 
 
 export default function Whiteboard({ roomId }) {
+  const [isDark, setIsDark] = useState(false)
+
   const {user}=useUser()
   const [connectionStatus, setConnectionStatus] = useState('connected')
   const lastStrokeIndex = useRef(0)
@@ -41,6 +72,34 @@ export default function Whiteboard({ roomId }) {
       
     
   console.log('emitting join-room with:', { roomId, username: user?.firstName || 'Anonymous' })
+
+
+const currentUser = {
+    userId:    user?.id,
+    name:      user?.fullName,
+    email:     user?.emailAddresses[0]?.emailAddress,
+    avatarUrl: user?.imageUrl,
+    joinedAt:  new Date(),
+  }
+   const createdBy = currentUser
+
+socket.emit('room-created',{
+  roomId,
+  name:getRandomName(),
+  createdBy,
+  users: [createdBy]  
+})
+
+socket.emit('user-joined', {
+  roomId,
+  user: currentUser
+})
+
+
+
+
+
+
 socket.emit('join-room', {
       roomId,
     
@@ -134,6 +193,23 @@ return ()=>{
 
 
 },[mounted])
+// Add this inside your MutationObserver useEffect, after setIsDark
+useEffect(() => {
+  const observer = new MutationObserver(() => {
+    const dark = document.documentElement.classList.contains('dark')
+    setIsDark(dark)
+    setColor(dark ? '#ffffff' : '#000000')  // ← add this line
+  })
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+  const dark = document.documentElement.classList.contains('dark')
+  setIsDark(dark)
+  setColor(dark ? '#ffffff' : '#000000')  // ← and this line
+  return () => observer.disconnect()
+}, [])
+
+// Derive bg color from isDark
+const bgColor = isDark ? '#1a1a1a' : '#ffffff'
+
 
 
 // logic for computer
@@ -146,7 +222,7 @@ return ()=>{
       ...prev,
       {
         points: [pos.x, pos.y],
-        color: tool==='eraser'?'#ffffff':color,
+        color: tool === 'eraser' ? bgColor : color,
         width: tool==='eraser'?20:brushWidth,
       }
     ])
@@ -223,20 +299,22 @@ const handleShareClick=()=>{
   return (
 
 <div
-className='relative w-screen h-screen overflow-hidden bg-white'
+className='relative w-screen h-screen overflow-hidden '
 
 >
 
   <div className='fixed top-2 left-2 z-50 md:hidden'>
-  <div className="flex flex-col gap-1 bg-white/90 p-2 rounded-xl shadow-lg">
+  <div className="flex flex-col gap-1  p-2 rounded-xl shadow-lg">
     <button onClick={() => setTool('pen')} className={`px-2 py-1 rounded-lg text-sm ${tool === 'pen' ? 'bg-black text-white' : 'text-gray-700'}`}>✏️</button>
     <button onClick={() => setTool('eraser')} className={`px-2 py-1 rounded-lg text-sm ${tool === 'eraser' ? 'bg-black text-white' : 'text-gray-600'}`}>🧹</button>
     <button onClick={handleClear} className="px-2 py-1 rounded-lg text-sm text-red-500 hover:bg-red-50">🗑️</button>
   </div>
 </div>
+
  
-<div className='absolute bottom-15 left-1/2 -translate-x-1/2 z-50 md:top-4 md:left-4 md:translate-x-0 md:bottom-auto bg-white bg-opacity-90 p-2 rounded-xl shadow-lg max-w-[95vw] overflow-x-hidden'>
+<div className='absolute bottom-15 left-1/2 -translate-x-1/2 z-50 md:top-4 md:left-4 md:translate-x-0 md:bottom-auto  bg-opacity-90 p-2 rounded-xl shadow-lg max-w-[95vw] overflow-x-hidden'>
   <Toolbar
+  isDark={isDark}
     color={color}
     onColorChange={setColor}
     width={brushWidth}
@@ -245,6 +323,8 @@ className='relative w-screen h-screen overflow-hidden bg-white'
     onToolChange={setTool}
     onClear={handleClear}
   />
+<RoomUsers roomId={roomId} />
+
 </div>
 <div className=' z-50 absolute top-4 right-4 md:hidden block'>
 <button
@@ -298,14 +378,15 @@ color={CURSOR_COLORS[i%CURSOR_COLORS.length]}
        onTouchStart={handleTouchStart}   
   onTouchMove={handleTouchMove}     
   onTouchEnd={handleTouchEnd} 
-      className="bg-white"
+    style={{ background: bgColor }}
     >
       <Layer>
         {lines.map((line, i) => (
           <Line
             key={i}
             points={line.points}
-            stroke={line.color}
+            
+            stroke={line.isEraser ? bgColor : line.color}
             strokeWidth={line.width}
             tension={0.5}
             lineCap="round"

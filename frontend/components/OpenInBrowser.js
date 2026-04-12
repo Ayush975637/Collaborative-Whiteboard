@@ -30,6 +30,7 @@ export default function OpenInBrowser() {
       <p className="text-gray-500 text-sm">
         This app cannot sign you in from LinkedIn's built-in browser.
         Please open it in Chrome or Safari to continue.
+    
       </p>
 
       {/* ✅ This button copies the URL so user can paste in real browser */}

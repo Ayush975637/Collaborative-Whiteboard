@@ -50,11 +50,11 @@ const handleNativeShare=async()=>{
 
 
 return (
- <div className="p-4 bg-white rounded-xl shadow-md w-80">
+ <div className="p-4  rounded-xl shadow-md w-80">
       <h2 className="text-lg font-bold mb-3">Share Room</h2>
 
       {/* Room Link Display */}
-      <div className="flex items-center gap-2 bg-gray-100 p-2 rounded-lg mb-4">
+      <div className="flex items-center gap-2  p-2 rounded-lg mb-4">
         <p className="text-sm text-gray-600 truncate flex-1">{roomLink}</p>
         <button
           onClick={copyLink}

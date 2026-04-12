@@ -3,6 +3,9 @@ const http = require('http')
 const { Server } = require('socket.io')
 const mongoose = require('mongoose')
 const cors = require('cors')
+
+const roomRoutes = require('./src/routes/room')
+
 const roomHandler = require('./src/socket/roomHandler')
 require('dotenv').config()
 const connectDB = require('./src/lib/db')
@@ -27,6 +30,7 @@ app.get('/', (req, res) => {
 app.get('/health', (req, res) => {
   res.status(200).send('ok')
 })
+app.use('/api', roomRoutes)
 
 // // socket logic
 // io.on('connection', (socket) => {

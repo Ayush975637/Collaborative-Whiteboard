@@ -10,34 +10,140 @@ const saveToMongo=async(roomId,lines)=>{
         {upsert:true}
     )
 }
-
-
-
-
-
-
-
-
-
-
-
-
 module.exports=(io)=>{
     io.on('connection', (socket) => {
         console.log('user connected:', socket.id)
-// socket.on('join-room',(roomId)=>{
-//     socket.join(roomId)
-//     console.log(`user ${socket.id} joined room ${roomId}`)
+socket.on('room-created',async({roomId,name,createdBy,users})=>{
 
-//     if(roomStates[roomId]){
-//         socket.emit('canvas-state',roomStates[roomId])
-//     }
-//     else{
-//         roomStates[roomId]=[]
-//     }
-// })
-socket.on('join-room',async({roomId,username,lastStrokeIndex})=>{
+    try{
+  const existing=await Room.findOne({roomId})
+  if(existing) {
+
+
+    socket.userId=createdBy.userId
     socket.join(roomId)
+    io.to(roomId).emit('user-online',{
+        userId:createdBy.userId
+    })
+
+
+
+    return 
+  }
+
+
+
+
+
+
+
+
+
+
+   const room =new Room({
+roomId,
+      name,
+      createdBy,
+      users,     
+      lines: [],
+      isActive: true,
+
+
+
+   })
+
+   await room.save()
+
+
+ socket.userId = createdBy.userId
+    socket.join(roomId)
+    io.to(roomId).emit('user-online', { userId: createdBy.userId })
+
+
+
+
+
+
+       console.log(`Room created: ${roomId} by ${createdBy.name}`)
+
+
+
+
+
+
+
+    }
+catch(err){
+    console.error('room-created error:', err)
+    socket.emit('error', { message: 'Failed to create room' })
+}
+
+
+
+
+
+}
+
+)
+
+
+// save user to mongo 
+
+socket.on('user-joined', async ({ roomId, user }) => {
+
+  try {
+    // Check if user already in room (reconnect case)
+if (!roomId || !user) {
+  return 
+}
+
+
+
+ await Room.updateOne(
+      { roomId, 'users.userId': { $ne: user.userId } }, // only if NOT already in array
+      { $push: { users: user } }
+    )
+
+
+
+//    const existing = await Room.findOne({
+//       roomId,
+//       'users.userId': user.userId
+//     })
+
+//   if (!existing) {
+//       await Room.findOneAndUpdate(
+//         { roomId },
+//         { $push: { users: user } },
+//         { new: true }
+//       )
+//     }
+
+    
+
+    socket.userId = user.userId  
+    socket.join(roomId)
+
+    // ✅ broadcast to ALL users in room — not just the one who joined
+    io.to(roomId).emit('user-online', { userId: user.userId })
+
+    console.log(`${user?.name} joined room ${roomId}`)
+  
+
+  } catch (err) {
+    console.error('user-joined error:', err)
+    socket.emit('error', { message: 'Failed to join room' })
+  }
+
+})
+
+
+
+
+
+
+socket.on('join-room',async({roomId,username,lastStrokeIndex})=>{
+    
     socket.data.roomId=roomId
     socket.data.username=username
     console.log(`user ${socket.id} joined room ${roomId} with username ${username}`)
@@ -47,6 +153,12 @@ socket.on('join-room',async({roomId,username,lastStrokeIndex})=>{
         roomUsers[roomId]={}
     }
     roomUsers[roomId][socket.id]={username,x:0,y:0}
+
+
+
+
+
+
 
 
 if(!roomStates[roomId]){
@@ -68,6 +180,12 @@ const existing=await Room.findOne({roomId})
     
     
 }
+
+ const onlineInRoom = [...io.sockets.adapter.rooms.get(roomId) || []]
+    .map(socketId => io.sockets.sockets.get(socketId)?.userId)
+    .filter(Boolean)
+
+  socket.emit('online-users-snapshot', onlineInRoom)
 
 
 
@@ -121,20 +239,7 @@ socket.on('cursor-move',({roomId,x,y})=>{
 
 
 
-// socket.on('clear-canvas',async({roomId})=>{
-//     roomStates[roomId]=[]
 
-// await Room.findOneAndUpdate(
-//     {roomId},
-//     {lines:[],updatedAt:Date.now()},
-//     {upsert:true}
-// )
-
-
-
-
-//     io.to(roomId).emit('canvas-cleared')
-// })
 socket.on('clear-canvas', async ({ roomId }) => {
   roomStates[roomId] = []
 
@@ -152,12 +257,15 @@ const roomId=socket.data.roomId
 if(roomId&&roomUsers[roomId]){
     delete roomUsers[roomId][socket.id]
     io.to(roomId).emit('user-left',socket.id)
+    io.to(roomId).emit('user-offline', { userId: socket.userId })
     io.to(roomId).emit('room-users',roomUsers[roomId])
 }
 
 
 
     console.log('user disconnected:', socket.id)
+
+
 })
 
 
