@@ -1,5 +1,18 @@
-import { SignIn } from '@clerk/nextjs'
+'use client'
 
+
+import { SignIn } from '@clerk/nextjs'
+import { useSearchParams } from 'next/navigation'
 export default function Page() {
-  return <SignIn />
+
+const searchParams=useSearchParams();
+const redirectUrl=searchParams.get('redirect_url')||'/'
+
+
+
+
+  return <SignIn
+  forceRedirectUrl={redirectUrl}
+  
+  />
 }

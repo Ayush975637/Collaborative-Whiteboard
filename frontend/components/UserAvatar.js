@@ -1,9 +1,10 @@
 // components/UserAvatar.jsx
 import { useOnlineUsers } from '@/hooks/useOnlineUsers'
 
-export default function UserAvatar({ user }) {
-  const onlineUsers = useOnlineUsers()
-  const isOnline = onlineUsers.has(user.userId)
+export default function UserAvatar({ user,isOnline}) {
+  if(!user){
+    return null;
+  }
 
   return (
     <div style={{ position: 'relative', display: 'inline-block' }}>

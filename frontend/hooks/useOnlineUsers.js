@@ -8,6 +8,7 @@ export function useOnlineUsers(){
 
  useEffect(() => {
     // someone came online
+    socket.emit('get-online-snapshot')
 
 socket.on('online-users-snapshot', (userIds) => {
       setOnlineUsers(new Set(userIds))
