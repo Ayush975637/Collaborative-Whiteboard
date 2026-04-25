@@ -51,7 +51,7 @@ function getRandomName() {
 
 export default function Whiteboard({ roomId }) {
   const [isDark, setIsDark] = useState(false);
-
+const lastEmitRef = useRef(0);
   const { user } = useUser();
   const [connectionStatus, setConnectionStatus] = useState("connected");
   const lastStrokeIndex = useRef(0);
@@ -273,20 +273,37 @@ export default function Whiteboard({ roomId }) {
         strokeId:uuidv4(),
         points: [pos.x, pos.y],
         color: tool === "eraser" ? bgColor : color,
-        width: tool === "eraser" ? 20 : brushWidth,
+        // width: tool === "eraser" ? 20 : brushWidth,
+        width:  brushWidth,
       },
     ]);
   };
 
 // writing  start properly 
 
+
   const handleMouseMove = (e) => {
-    const pos = e.target.getStage().getPointerPosition();
+ 
+  const pos = e.target.getStage().getPointerPosition();
+const now = Date.now();
+if (!pos) return;
+
+    if (now - lastEmitRef.current > 16) {
     socket.emit("cursor-move", {
-      roomId,
       x: pos.x,
       y: pos.y,
     });
+
+    lastEmitRef.current = now;
+  }
+    
+
+ 
+
+
+
+
+
 
     if (!isDrawing) return;
 
@@ -350,9 +367,21 @@ export default function Whiteboard({ roomId }) {
     <div>
       
     <div className="relative w-screen h-screen overflow-hidden ">
-      
+      <div className="fixed top-4 left-4 z-[100]">
+  <a
+    href={"/"}
+    className="flex items-center gap-2 text-xl font-bold hover:scale-105 transition-transform"
+  >
+    <SiCanvas size={22} />
+    <span>CanvasX</span>
+  </a>
+</div>
+              
+              
+            
 
-      <div className="fixed top-2 left-2 z-50 md:hidden">
+      <div className="fixed top-12 left-4 z-50 md:hidden">
+        
         
         <div className="flex flex-col gap-1  p-2 rounded-xl shadow-lg">
           
@@ -385,7 +414,7 @@ export default function Whiteboard({ roomId }) {
         </div>
       </div>
 
-      <div className="absolute bottom-15 left-1/2 -translate-x-1/2 z-50 md:top-4 md:left-4 md:translate-x-0 md:bottom-auto  bg-opacity-90 p-2 rounded-xl shadow-lg max-w-[95vw] overflow-x-hidden">
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 md:top-12 md:left-4 md:translate-x-0 md:bottom-auto  bg-opacity-90 p-2 rounded-xl shadow-lg max-w-[95vw] overflow-x-hidden">
       
         <Toolbar
           isDark={isDark}

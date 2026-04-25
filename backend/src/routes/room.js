@@ -1,6 +1,11 @@
 const express = require('express')
 const router = express.Router()
 const Room = require('../models/Room')
+// const roomIdSchema = require('../validation/roomId')
+const {z} = require('zod');
+
+
+const roomIdSchema=z.string().max(50, 'Room Id too long').regex(/^[a-zA-Z0-9-]+$/, 'Invalid Room id format');
 
 // ✅ specific routes FIRST, dynamic routes AFTER
 router.get('/rooms/history/:userId', async (req, res) => {
@@ -31,9 +36,12 @@ router.get('/rooms/history/:userId', async (req, res) => {
 // ✅ dynamic route AFTER
 router.get('/room/:roomId/users', async (req, res) => {
   try {
-    const { roomId } = req.params
+    const result=roomIdSchema.safeParse(req.params.roomId);
+    if(!result.success){
+      return res.status(400).json({ message: 'Invalid Room Id' })
+    }
 
-    const room = await Room.findOne({ roomId })
+    const room = await Room.findOne({ roomId: result.data })
       .select('roomId name users createdBy')
 
     if (!room) {
