@@ -1,3 +1,4 @@
+<img width="1920" height="1080" alt="Screenshot (335)" src="https://github.com/user-attachments/assets/b20fccc6-281f-4af9-98e6-cf5f422e75e3" />
 # Collaborative Whiteboard
 
 A real-time collaborative whiteboard where multiple users can draw together simultaneously in shared rooms.
@@ -8,8 +9,11 @@ A real-time collaborative whiteboard where multiple users can draw together simu
 
 ## Screenshots
 
-<img width="1920" height="1080" alt="Screenshot (315)" src="https://github.com/user-attachments/assets/4adbf76e-d8f0-473c-913e-9f878d9ed32e" />
-<img width="1920" height="1080" alt="Screenshot (316)" src="https://github.com/user-attachments/assets/e41ff61b-1cc0-4e88-aeeb-fb58a5154909" />
+
+<img width="1920" height="1080" alt="Screenshot (335)" src="https://github.com/user-attachments/assets/ebc0677b-fc91-4a86-93ae-dd258722827e" />
+<img width="1920" height="1080" alt="Screenshot (336)" src="https://github.com/user-attachments/assets/8a3076dc-e318-4943-ab29-e2b4a15b3501" />
+
+
 
 ---
 
