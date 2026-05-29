@@ -22,7 +22,7 @@ const roomIdSchema = z
 };
 
 module.exports = validateRoomId;
-const TTL = 60 * 60 * 12;
+const TTL = 60 * 60 * 6;
 
 const batchSave = setInterval(async () => {
   for (const roomId of dirtyRooms) {

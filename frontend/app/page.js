@@ -14,41 +14,39 @@ export default function Home() {
   }
 
   return (
-    <main className="flex flex-col items-center justify-center h-screen gap-6 ">
+    <main className="flex flex-col items-center justify-center h-screen gap-6 from-red-300 to-white-300 bg-gradient-to-br">
 
       {/* navbar */}
       
-      
-{/* 
-      <h1 className="text-4xl font-bold text-orange-500">Collaborative Whiteboard</h1>
-      <p className="text-gray-500">Draw together in real time</p> */}
+ 
       <main className="flex flex-col items-center justify-center min-h-screen gap-6  px-4">
 
         <div className="w-full fixed top-0 left-0 z-50   shadow-sm">
   <Navbar />
 </div>
-  <h1 className="text-3xl md:text-4xl font-bold text-orange-500 text-center">
+  <h1 className="text-3xl md:text-6xl font-extrabold text-orange-500  shadow-black   text-center hover:tracking-wide transition-all duration-300">
     Collaborative Whiteboard
   </h1>
-  <p className="text-gray-500 text-sm md:text-base text-center">
+  <p className="text-black-500 text-xl md:text-2xl text-center">
     Draw together in real time
   </p>
    <SignedIn>
+    <div className="flex flex-col md:flex-row gap-4">
         <button
           onClick={createRoom}
-          className="bg-black text-white px-8 py-3 rounded-xl text-lg hover:bg-gray-800 transition"
+          className="bg-red-400 text-white font-bold px-8 py-3 rounded-xl text-lg hover:bg-red-500 transition"
         >
           Create New Room
         </button>
 
  <button
           
-          className="bg-black text-white px-8 py-3 rounded-xl text-lg hover:bg-gray-800 transition"
+          className="bg-yellow-400 text-white font-bold px-8 py-3 rounded-xl text-lg hover:bg-yellow-500 transition"
         >
           <a href={'/history'}>  History</a>
         
         </button>
-
+</div>
 
 
       </SignedIn>
@@ -62,22 +60,7 @@ export default function Home() {
       </SignedOut>
 </main>
 
-      {/* <SignedIn>
-        <button
-          onClick={createRoom}
-          className="bg-black text-white px-8 py-3 rounded-xl text-lg hover:bg-gray-800 transition"
-        >
-          Create New Room
-        </button>
-      </SignedIn>
-
-      <SignedOut>
-        <SignInButton mode="modal">
-          <button className="bg-black text-white px-8 py-3 rounded-xl text-lg">
-            Sign In to Start
-          </button>
-        </SignInButton>
-      </SignedOut> */}
+     
 
     </main>
   )
