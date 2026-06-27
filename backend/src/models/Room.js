@@ -4,11 +4,7 @@ const mongoose = require('mongoose')
 
 
 
-const lineSchema=new mongoose.Schema({
-    points: [Number],
-    color: String,
-    width: Number,
-})
+
 
 const userSchema=new mongoose.Schema({
  userId:    { type: String, required: true },   
@@ -30,14 +26,14 @@ const roomSchema=new mongoose.Schema({
     },
     name:      { type: String },       
     createdBy: { type: userSchema, required: true },
-    lines:[lineSchema],
+    elements: [mongoose.Schema.Types.Mixed],
     users:[userSchema],
     isActive:  { type: Boolean, default: true },
    
 }
 
 , {
-  timestamps: true  // ← auto createdAt + updatedAt, updates on every save
+  timestamps: true  
 })
 
 

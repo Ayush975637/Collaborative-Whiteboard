@@ -35,10 +35,10 @@ const batchSave = setInterval(async () => {
   }
 }, 5000);
 
-const saveToMongo = async (roomId, lines) => {
+const saveToMongo = async (roomId, elements) => {
   await Room.findOneAndUpdate(
     { roomId },
-    { lines, updatedAt: Date.now() },
+    { elements, updatedAt: Date.now() },
     { upsert: true },
   );
 };
@@ -78,7 +78,7 @@ module.exports = (io) => {
           name,
           createdBy,
           users,
-          lines: [],
+          elements: [],
           isActive: true,
         });
 
@@ -127,7 +127,7 @@ module.exports = (io) => {
       }
     });
 
-    socket.on("join-room", async ({ roomId, username, lastStrokeIndex }) => {
+    socket.on("join-room", async ({ roomId, username, lastElementIndex }) => {
 const validRoomId = validateRoomId(roomId, socket);
 if (!validRoomId) return;
 
@@ -151,7 +151,7 @@ if (!validRoomId) return;
           0,
           -1,
         );
-console.log("Redis strokes on join:", redisStrokes.map(JSON.parse));
+// console.log("Redis strokes on join:", redisStrokes.map(JSON.parse));
 
 
 
@@ -159,7 +159,7 @@ console.log("Redis strokes on join:", redisStrokes.map(JSON.parse));
           roomStates[roomId] = redisStrokes.map((s) => JSON.parse(s));
         } else {
           const existing = await Room.findOne({ roomId });
-          roomStates[roomId] = existing?.lines || [];
+          roomStates[roomId] = existing?.elements || [];
         }
       }
 
@@ -171,14 +171,14 @@ console.log("Redis strokes on join:", redisStrokes.map(JSON.parse));
       socket.emit("online-users-snapshot", onlineInRoom);
 
       // missed strokes  for that user that  enter   room that have alerady draw some ines
-      const missedStrokes = roomStates[roomId].slice(lastStrokeIndex);
+      const missedStrokes = roomStates[roomId].slice(lastElementIndex);
 
       socket.emit("canvas-state", missedStrokes);
 
       io.to(roomId).emit("room-users", roomUsers[roomId]);
     });
     // line draw handle mouse up
-    socket.on("draw", async ({ roomId, line }) => {
+    socket.on("draw", async ({ roomId, addedElement }) => {
 
  roomId=socket.data.roomId;
  if(!roomId) return;
@@ -187,21 +187,53 @@ console.log("Redis strokes on join:", redisStrokes.map(JSON.parse));
 
 
       if (roomStates[roomId]) {
-        roomStates[roomId].push(line);
+        roomStates[roomId].push(addedElement);
       }
       const key = `room:${roomId}:strokes`;
       const exists = await redis.exists(key);
 
-      await redis.rpush(`room:${roomId}:strokes`, JSON.stringify(line));
+      await redis.rpush(`room:${roomId}:strokes`, JSON.stringify(addedElement));
       const data = await redis.lrange(key, 0, -1);
       console.log("Redis strokes:", data.map(JSON.parse));
       if (!exists) {
         await redis.expire(key, TTL);
         console.log(`Set TTL for ${key} to ${TTL} seconds`);
       }
-      socket.to(roomId).emit("drawing", line);
+      socket.to(roomId).emit("drawing", addedElement);
       dirtyRooms.add(roomId);
     });
+
+
+
+socket.on("element-update",({roomId,element})=>{
+
+  const idx=roomStates[roomId]?.findIndex(e=>e.id===element.id);
+if(idx===-1){
+  console.log("Element not found:", element.id);
+  return ;
+}
+  roomStates[roomId][idx]=element;
+
+  io.to(roomId).emit("element-updated",element);
+})
+
+socket.on("element-delete",({roomId,Id})=>{
+  console.log("element deleted",roomId,Id);
+roomStates[roomId] =
+roomStates[roomId]?.filter(
+    e => e.id !== Id
+);
+
+
+io.to(roomId).emit("element-deleted",(Id));
+
+
+
+})
+
+
+
+
 
     // cursor position
     socket.on("cursor-move", ({ roomId, x, y }) => {
@@ -230,7 +262,7 @@ console.log("Redis strokes on join:", redisStrokes.map(JSON.parse));
 
       await Room.findOneAndUpdate(
         { roomId },
-        { $set: { lines: [], updatedAt: Date.now() } }, // ✅ use $set
+        { $set: { elements: [], updatedAt: Date.now() } }, // ✅ use $set
         { upsert: true },
       );
 

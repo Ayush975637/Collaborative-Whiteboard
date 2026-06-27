@@ -32,21 +32,6 @@ app.get('/health', (req, res) => {
 })
 app.use('/api', roomRoutes)
 
-// // socket logic
-// io.on('connection', (socket) => {
-//   console.log('user connected:', socket.id)
-
-//   // socket.on('join-room', (roomId) => {
-//   //   socket.join(roomId)
-//   //   console.log(`user ${socket.id} joined room ${roomId}`)
-//   // })
-
-//   socket.on('disconnect', () => {
-//     console.log('user disconnected:', socket.id)
-//   })
-// })
-
-// connect mongo and start server
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     server.listen(process.env.PORT || 8080, () => {
