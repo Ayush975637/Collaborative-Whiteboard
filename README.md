@@ -9,9 +9,12 @@ A real-time collaborative whiteboard where multiple users can draw together simu
 
 ## Screenshots
 
-
+<img width="1920" height="1080" alt="Screenshot (346)" src="https://github.com/user-attachments/assets/9dd81600-f62a-4095-bf6a-246c62326c48" />
 <img width="1920" height="1080" alt="Screenshot (335)" src="https://github.com/user-attachments/assets/ebc0677b-fc91-4a86-93ae-dd258722827e" />
-<img width="1920" height="1080" alt="Screenshot (336)" src="https://github.com/user-attachments/assets/8a3076dc-e318-4943-ab29-e2b4a15b3501" />
+
+<img width="1920" height="1080" alt="Screenshot (344)" src="https://github.com/user-attachments/assets/0ad971ae-bb85-41cd-a023-59ae8db92bc1" />
+<img width="1920" height="1080" alt="Screenshot (345)" src="https://github.com/user-attachments/assets/fc8c39ee-fcc3-4245-93f4-d71b013e09b8" />
+
 
 
 
@@ -19,14 +22,19 @@ A real-time collaborative whiteboard where multiple users can draw together simu
 
 ## Features
 
-* 🎨 Real-time drawing sync across all users in a room
-* 🖱️ Live cursor tracking with usernames
-* 🚪 Room-based architecture — each room has unique URL
-* 🔐 Authentication via Clerk
-* 🔄 Auto reconnection with missed stroke recovery
-* 🛠️ Toolbar with colors, brush sizes, and eraser
-* 📱 Works on desktop and mobile
-
+* 🎨 Real-time collaborative whiteboard
+* ✏️ Freehand drawing (Pen tool)
+* 🟥 Rectangle, 🟡 Circle, ↗️ Arrow, 💬 Text tools
+* 🔄 Real-time element movement, resizing and rotation
+* ❌ Delete selected elements
+* ↩️ Undo / Redo
+* 👥 Live cursor tracking with usernames
+* 🚪 Room-based collaboration with unique shareable URLs
+* 🔐 Authentication with Clerk
+* 🔄 Auto reconnection with missed element recovery
+* 💾 Canvas persistence using Redis + MongoDB
+* 📤 Export canvas as an image
+* 📱 Responsive interface for desktop and mobile
 ---
 
 ## Tech Stack
@@ -44,7 +52,7 @@ A real-time collaborative whiteboard where multiple users can draw together simu
 * Socket.io for WebSocket management
 * Redis for write buffer and fast stroke storage
 * MongoDB for canvas persistence
-
+* Zod for socket payload validation
 ### Deployment
 
 * Frontend → Vercel
@@ -56,18 +64,20 @@ A real-time collaborative whiteboard where multiple users can draw together simu
 ## Architecture
 
 ```
-User draws stroke
-      ↓
-Socket.io emits 'draw' event to Node.js backend
-      ↓
-Backend writes stroke to Redis instantly (prevents data loss)
-      ↓
-Backend broadcasts to all users in same room
-      ↓
-Every 10 strokes → batch save to MongoDB
-      ↓
-On page refresh → load from MongoDB
-On server crash → Redis preserves recent strokes
+User creates or edits an element
+            ↓
+Socket.io emits operation to backend
+            ↓
+Backend updates in-memory room state
+            ↓
+Operation is written to Redis for fast recovery
+            ↓
+Backend broadcasts update to every connected client
+            ↓
+Dirty rooms are periodically synced to MongoDB
+            ↓
+On reconnect:
+Redis → MongoDB fallback → missed element synchronization
 ```
 
 Frontend and backend are deployed separately because Vercel's
@@ -139,18 +149,24 @@ http://localhost:3000
 
 ## Data Model
 
-### Stroke Data Model
+### Whiteboard Element
 
-Each drawing action is stored as a stroke object inside a room.
+Each drawable object is stored as an element.
 
 ```json
 {
-  "points": [x1, y1, x2, y2, x3, y3],
-  "color": "#000000",
-  "width": 4
+  "id": "element-1",
+  "type": "rect",
+  "x": 120,
+  "y": 180,
+  "width": 150,
+  "height": 80,
+  "rotation": 25,
+  "fill": "#ff6b6b"
 }
 ```
 
+Different element types (pen, rectangle, circle, arrow, text) store only the properties they require.
 ### Room Data Model
 
 A room stores the full whiteboard state and participants.
@@ -172,13 +188,7 @@ A room stores the full whiteboard state and participants.
       "name": "Ayush"
     }
   ],
-  "lines": [
-    {
-      "points": [10, 20, 15, 25],
-      "color": "#000",
-      "width": 4
-    }
-  ],
+    "elements": [],
   "isActive": true,
   "createdAt": "...",
   "updatedAt": "..."
@@ -187,37 +197,65 @@ A room stores the full whiteboard state and participants.
 
 ---
 
-## Hard Problems Solved
+## Interesting Engineering Challenges
 
-### 1. Canvas persistence on reconnect
+### 1. Efficient reconnect synchronization
 
-When a user reconnects after losing connection, sending the entire
-canvas again wastes bandwidth. I track the last stroke index on the
-client and emit it on rejoin — backend sends only missed strokes.
-
-### 2. Data loss on server crash
-
-In-memory `roomStates` are lost if the server crashes. I implemented
-Redis as a write buffer — every stroke writes to Redis instantly before
-MongoDB. On restart, backend loads from Redis first, then falls back to MongoDB.
-
-### 3. WebSocket deployment
-
-Vercel doesn't support persistent connections. Separating frontend
-and backend into different deployment targets (Vercel + Render)
-solved this while keeping cold start times low.
+Instead of sending the entire whiteboard every time a user reconnects, the client tracks its last received element index. The server sends only the missing operations, reducing bandwidth and reconnect time.
 
 ---
 
-## What I'd Improve
+### 2. Reliable persistence
 
-* [ ] Implement CRDT (Yjs) for proper conflict resolution instead of last-write-wins
-* [ ] Add Redis Pub/Sub for horizontal scaling across multiple server instances
-* [ ] Undo/redo functionality with operation history
-* [ ] Export canvas as PNG
-* [ ] Room access control (owner can lock room)
+Active rooms are stored in memory for fast updates while every operation is immediately written to Redis. Dirty rooms are periodically synchronized to MongoDB, allowing recovery after server restarts.
 
 ---
+
+### 3. Real-time collaborative editing
+
+Creating elements is straightforward, but synchronizing movement, resizing, rotation and deletion required introducing dedicated socket events that update existing elements by ID across all connected clients.
+
+---
+
+### 4. Deployment with WebSockets
+
+Since Vercel doesn't support long-lived WebSocket servers, the application uses a split deployment:
+
+- Frontend → Vercel
+- Backend → Render
+
+allowing persistent Socket.io connections while keeping frontend deployment simple.
+
+## Future Improvements
+
+- [ ] CRDT/Yjs for conflict-free collaboration
+- [ ] Redis Pub/Sub for horizontal scaling
+- [ ] Element grouping
+- [ ] Layers panel
+- [ ] Image upload support
+- [ ] Sticky notes
+- [ ] Keyboard shortcuts
+- [ ] Room permissions and owner controls
+- [ ] Infinite canvas
+- [ ] Version history
+
+---
+
+
+
+## Project Highlights
+
+- Built a real-time collaborative whiteboard from scratch using Socket.io.
+- Designed an element-based architecture supporting creation, movement, resizing, rotation and deletion.
+- Implemented incremental synchronization so reconnecting users receive only missing updates.
+- Used Redis as a write buffer to reduce data loss and improve recovery.
+- Batched database writes to MongoDB to minimize unnecessary database operations.
+- Added collaborative cursors and room presence tracking.
+- Designed the application for future scalability with Redis Pub/Sub and CRDT support in mind.
+
+
+
+
 
 ## Author
 
