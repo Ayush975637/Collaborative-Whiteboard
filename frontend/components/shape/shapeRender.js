@@ -4,6 +4,7 @@ import Cir from './Circle'
 import Tex from './text'
 import Arr from './Arrow'
 import Lin from './line'
+import Erase from './erase'
 const ShapeRender = ({element,selected,onSelect,onChange}) => {
 
 
@@ -72,6 +73,19 @@ onChange={onChange}
     
     
     />
+
+ case "eraser":
+    return <Erase
+    
+   
+element={element}
+
+    
+    
+    
+    
+    
+    />   
 
 
 

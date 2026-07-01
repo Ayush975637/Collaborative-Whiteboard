@@ -278,6 +278,40 @@ export default function Whiteboard({ roomId }) {
       setCord({ x: pos.x, y: pos.y, left: stageBox.left, right: stageBox.top });
       setInput("");
     }
+if(tool == "eraser"&& !selectedId){
+  console.log("eraser started mouse down ",selectedId,tool);
+  
+  setIsDrawing(true);
+
+      const id = crypto.randomUUID();
+      const newElements = [
+        ...elements,
+        {
+          type: "eraser",
+          points: [pos.x, pos.y],
+          id,
+          stroke: "#1a1a1a",
+          strokeWidth: brushWidth,
+          lineCap: "round",
+          lineJoin: "round",
+          
+        },
+      ];
+
+      console.log("eraser ke badd elemets ", elements);
+     
+      setElements(newElements);
+      saveHistory(newElements);
+     
+      console.log("eraser start point se ", elements);
+
+
+
+}
+
+
+
+
 
     if (tool == "circle" && !selectedId && clickedOnEmpty) {
       console.log("circle started mouse down ");
@@ -366,7 +400,7 @@ export default function Whiteboard({ roomId }) {
     if (!isDrawing) {
       return;
     }
-
+if(tool=="pen"){
     let lastLine = elements[elements.length - 1];
     if (lastLine.type != "line") {
       return;
@@ -376,6 +410,24 @@ export default function Whiteboard({ roomId }) {
     setElements((prev) =>
       prev.map((shape) => (shape.id === lastLine.id ? lastLine : shape)),
     );
+  }
+  if(tool=="eraser"){
+    let lastEraser = elements[elements.length - 1];
+    if (lastEraser.type != "eraser") {
+      return;
+    }
+    lastEraser.points = lastEraser.points.concat([pos.x, pos.y]);
+
+    setElements((prev) =>
+      prev.map((shape) => (shape.id === lastEraser.id ? lastEraser : shape)),
+    );
+  }
+
+
+
+
+
+
 
     console.log("line updte cursor move ", elements);
   };
@@ -391,6 +443,16 @@ export default function Whiteboard({ roomId }) {
 
       socket.emit("draw", { roomId, addedElement });
     }
+    if(tool=="eraser"){
+      setIsDrawing(false);
+      let addedElement = elements[elements.length - 1];
+      if (addedElement.type != "eraser") {
+        return;
+      }
+        socket.emit("draw", { roomId, addedElement });
+
+    }
+
   };
   //  handle clear  full canvas
   const handleClear = () => {
@@ -772,10 +834,13 @@ export default function Whiteboard({ roomId }) {
                     element={element}
                     selected={selectedId == element.id}
                     onSelect={() => {
+                     if(tool == "eraser") return;
                       console.log("selected", element.id);
                       setSelectedId(element.id);
                     }}
                     onChange={(newAttrs) => {
+
+                  if(tool == "eraser") return;
                       setElements((prev) =>
                         prev.map((shape) =>
                           shape.id === element.id ? newAttrs : shape,
